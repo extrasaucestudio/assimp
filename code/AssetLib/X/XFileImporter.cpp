@@ -595,8 +595,11 @@ void XFileImporter::ConvertMaterials( aiScene* pScene, std::vector<XFile::Materi
             for( size_t b = 0; b < pScene->mNumMaterials; ++b ) {
                 aiString name;
                 pScene->mMaterials[b]->Get( AI_MATKEY_NAME, name);
-                if( strcmp( name.C_Str(), oldMat.mName.data()) == 0 ) {
-                    oldMat.sceneIndex = a;
+                if( strcmp( name.C_Str(), oldMat.mName.data()) == 0 )
+                {
+                    // TGC -  I think should should have been 'B', not 'A' as it is the reference to the scene index, not
+                    // the index to the passed in material (easy mistake to make :)
+                    oldMat.sceneIndex = b;// a;
                     break;
                 }
             }
