@@ -714,7 +714,9 @@ bool FBXConverter::GenerateTransformationNodeChain(const Model &model, const std
     if (ok && PostRotation.SquareLength() > zero_epsilon) {
         chainBits = chainBits | (1 << TransformationComp_PostRotation);
 
-        GetRotationMatrix(Model::RotOrder::RotOrder_EulerXYZ, PostRotation, chain[TransformationComp_PostRotation]);
+        //GetRotationMatrix(Model::RotOrder::RotOrder_EulerXYZ, PostRotation, chain[TransformationComp_PostRotation]);
+        //PE: Change from github https://github.com/assimp/assimp/issues/1974#issuecomment-446375966
+        GetRotationMatrix(Model::RotOrder::RotOrder_EulerZYX, -PostRotation, chain[TransformationComp_PostRotation]);
     }
 
     const aiVector3D &RotationPivot = PropertyGet<aiVector3D>(props, "RotationPivot", ok);
