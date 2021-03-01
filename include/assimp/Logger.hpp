@@ -2,7 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2021, assimp team
 
 
 All rights reserved.
@@ -73,9 +73,9 @@ public:
      *  @brief  Log severity to describe the granularity of logging.
      */
     enum LogSeverity {
-        NORMAL,     //!< Normal granularity of logging
-        DEBUG,      //!< Debug messages will be logged, but not verbose debug messages.
-        VERBOSE     //!< All messages will be logged
+        NORMAL,     ///< Normal granularity of logging
+        DEBUGGING,  ///< Debug messages will be logged, but not verbose debug messages.
+        VERBOSE     ///< All messages will be logged
     };
 
     // ----------------------------------------------------------------------

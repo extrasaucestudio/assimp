@@ -3,7 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2021, assimp team
 
 All rights reserved.
 
@@ -46,11 +46,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <assimp/scene.h>
 #include <assimp/Exporter.hpp>
 #include <assimp/Importer.hpp>
+#include <assimp/LogStream.hpp>
+#include <assimp/DefaultLogger.hpp>
+
 
 #include <array>
 
 #include <assimp/pbrmaterial.h>
-
 using namespace Assimp;
 
 class utglTF2ImportExport : public AbstractImportExportBase {
@@ -541,3 +543,69 @@ TEST_F(utglTF2ImportExport, norootnode_issue_3269) {
     const aiScene *scene = importer.ReadFile(ASSIMP_TEST_MODELS_DIR "/glTF2/issue_3269/texcoord_crash.gltf", aiProcess_ValidateDataStructure);
     ASSERT_EQ(scene, nullptr);
 }
+
+TEST_F(utglTF2ImportExport, indexOutOfRange) {
+    // The contents of an asset should not lead to an assert.
+    Assimp::Importer importer;
+
+    struct LogObserver : Assimp::LogStream {
+        bool m_observedWarning = false;
+        void write(const char *message) override {
+            m_observedWarning = m_observedWarning || std::strstr(message, "faces were dropped");
+        }
+    };
+    LogObserver logObserver;
+    
+    DefaultLogger::get()->attachStream(&logObserver);
+    const aiScene *scene = importer.ReadFile(ASSIMP_TEST_MODELS_DIR "/glTF2/IndexOutOfRange/IndexOutOfRange.gltf", aiProcess_ValidateDataStructure);
+    ASSERT_NE(scene, nullptr);
+    ASSERT_NE(scene->mRootNode, nullptr);
+    ASSERT_EQ(scene->mNumMeshes, 1u);
+    EXPECT_EQ(scene->mMeshes[0]->mNumFaces, 11u);
+    DefaultLogger::get()->detachStream(&logObserver);
+    EXPECT_TRUE(logObserver.m_observedWarning);
+}
+
+TEST_F(utglTF2ImportExport, allIndicesOutOfRange) {
+    // The contents of an asset should not lead to an assert.
+    Assimp::Importer importer;
+    const aiScene *scene = importer.ReadFile(ASSIMP_TEST_MODELS_DIR "/glTF2/IndexOutOfRange/AllIndicesOutOfRange.gltf", aiProcess_ValidateDataStructure);
+    ASSERT_EQ(scene, nullptr);
+    std::string error = importer.GetErrorString();
+    ASSERT_NE(error.find("Mesh \"Mesh\" has no faces"), std::string::npos);
+}
+
+/////////////////////////////////
+// Draco decoding
+
+TEST_F(utglTF2ImportExport, import_dracoEncoded) {
+    Assimp::Importer importer;
+    const aiScene *scene = importer.ReadFile(ASSIMP_TEST_MODELS_DIR "/glTF2/draco/2CylinderEngine.gltf",
+            aiProcess_ValidateDataStructure);
+#ifndef ASSIMP_ENABLE_DRACO
+    // No draco support, scene should not load
+    ASSERT_EQ(scene, nullptr);
+#else
+    ASSERT_NE(scene, nullptr);
+    ASSERT_NE(scene->mMetaData, nullptr);
+    {
+        ASSERT_TRUE(scene->mMetaData->HasKey(AI_METADATA_SOURCE_FORMAT));
+        aiString format;
+        ASSERT_TRUE(scene->mMetaData->Get(AI_METADATA_SOURCE_FORMAT, format));
+        ASSERT_EQ(strcmp(format.C_Str(), "glTF2 Importer"), 0);
+    }
+    {
+        ASSERT_TRUE(scene->mMetaData->HasKey(AI_METADATA_SOURCE_FORMAT_VERSION));
+        aiString version;
+        ASSERT_TRUE(scene->mMetaData->Get(AI_METADATA_SOURCE_FORMAT_VERSION, version));
+        ASSERT_EQ(strcmp(version.C_Str(), "2.0"), 0);
+    }
+    {
+        ASSERT_TRUE(scene->mMetaData->HasKey(AI_METADATA_SOURCE_GENERATOR));
+        aiString generator;
+        ASSERT_TRUE(scene->mMetaData->Get(AI_METADATA_SOURCE_GENERATOR, generator));
+        ASSERT_EQ(strcmp(generator.C_Str(), "COLLADA2GLTF"), 0);
+    }
+#endif
+}
+

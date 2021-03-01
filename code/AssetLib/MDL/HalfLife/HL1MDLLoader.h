@@ -3,7 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2021, assimp team
 
 All rights reserved.
 
@@ -218,12 +218,12 @@ private:
 template <typename MDLFileHeader>
 void HL1MDLLoader::load_file_into_buffer(const std::string &file_path, unsigned char *&buffer) {
     if (!io_->Exists(file_path))
-        throw DeadlyImportError("Missing file " + DefaultIOSystem::fileName(file_path) + ".");
+        throw DeadlyImportError("Missing file ", DefaultIOSystem::fileName(file_path), ".");
 
     std::unique_ptr<IOStream> file(io_->Open(file_path));
 
     if (file.get() == nullptr) {
-        throw DeadlyImportError("Failed to open MDL file " + DefaultIOSystem::fileName(file_path) + ".");
+        throw DeadlyImportError("Failed to open MDL file ", DefaultIOSystem::fileName(file_path), ".");
     }
 
     const size_t file_size = file->FileSize();

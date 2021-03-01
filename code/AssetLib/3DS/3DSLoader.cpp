@@ -3,7 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2021, assimp team
 
 All rights reserved.
 
@@ -147,7 +147,7 @@ void Discreet3DSImporter::InternReadFile(const std::string &pFile,
 
     // We should have at least one chunk
     if (theStream.GetRemainingSize() < 16) {
-        throw DeadlyImportError("3DS file is either empty or corrupt: " + pFile);
+        throw DeadlyImportError("3DS file is either empty or corrupt: ", pFile);
     }
     this->stream = &theStream;
 
@@ -178,7 +178,7 @@ void Discreet3DSImporter::InternReadFile(const std::string &pFile,
     // file.
     for (auto &mesh : mScene->mMeshes) {
         if (mesh.mFaces.size() > 0 && mesh.mPositions.size() == 0) {
-            throw DeadlyImportError("3DS file contains faces but no vertices: " + pFile);
+            throw DeadlyImportError("3DS file contains faces but no vertices: ", pFile);
         }
         CheckIndices(mesh);
         MakeUnique(mesh);
@@ -266,6 +266,7 @@ void Discreet3DSImporter::ParseMainChunk() {
 
     case Discreet3DS::CHUNK_PRJ:
         bIsPrj = true;
+        break;
     case Discreet3DS::CHUNK_MAIN:
         ParseEditorChunk();
         break;

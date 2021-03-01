@@ -2,7 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2021, assimp team
 
 
 All rights reserved.
@@ -402,7 +402,7 @@ aiMaterial::~aiMaterial() {
 }
 
 // ------------------------------------------------------------------------------------------------
-aiString aiMaterial::GetName() {
+aiString aiMaterial::GetName() const {
     aiString name;
     Get(AI_MATKEY_NAME, name);
 

@@ -1,8 +1,8 @@
-﻿/*
+/*
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2021, assimp team
 
 All rights reserved.
 
@@ -46,11 +46,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *   KHR_materials_pbrSpecularGlossiness full
  *   KHR_materials_unlit full
  *   KHR_lights_punctual full
+ *   KHR_materials_sheen full
+ *   KHR_materials_clearcoat full
+ *   KHR_materials_transmission full
  */
 #ifndef GLTF2ASSET_H_INC
 #define GLTF2ASSET_H_INC
 
-#ifndef ASSIMP_BUILD_NO_GLTF_IMPORTER
+#if !defined(ASSIMP_BUILD_NO_GLTF_IMPORTER) && !defined(ASSIMP_BUILD_NO_GLTF2_IMPORTER)
 
 #include <assimp/Exceptional.h>
 
@@ -62,18 +65,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <vector>
 
-#ifndef RAPIDJSON_HAS_STDSTRING
-#define RAPIDJSON_HAS_STDSTRING 1
-#endif
-
 #if (__GNUC__ == 8 && __GNUC_MINOR__ >= 0)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wclass-memaccess"
 #endif
-
-#ifndef RAPIDJSON_NOMEMBERITERATORCLASS
-#define RAPIDJSON_NOMEMBERITERATORCLASS
-#endif 
 
 #include <rapidjson/document.h>
 #include <rapidjson/error/en.h>
@@ -202,7 +197,7 @@ inline unsigned int ComponentTypeSize(ComponentType t) {
     case ComponentType_UNSIGNED_BYTE:
         return 1;
     default:
-        throw DeadlyImportError("GLTF: Unsupported Component Type " + to_string(t));
+        throw DeadlyImportError("GLTF: Unsupported Component Type ", to_string(t));
     }
 }
 
@@ -381,85 +376,6 @@ struct Object {
 // Classes for each glTF top-level object type
 //
 
-//! A typed view into a BufferView. A BufferView contains raw binary data.
-//! An accessor provides a typed view into a BufferView or a subset of a BufferView
-//! similar to how WebGL's vertexAttribPointer() defines an attribute in a buffer.
-struct Accessor : public Object {
-    struct Sparse;
-
-    Ref<BufferView> bufferView; //!< The ID of the bufferView. (required)
-    size_t byteOffset; //!< The offset relative to the start of the bufferView in bytes. (required)
-    ComponentType componentType; //!< The datatype of components in the attribute. (required)
-    size_t count; //!< The number of attributes referenced by this accessor. (required)
-    AttribType::Value type; //!< Specifies if the attribute is a scalar, vector, or matrix. (required)
-    std::vector<double> max; //!< Maximum value of each component in this attribute.
-    std::vector<double> min; //!< Minimum value of each component in this attribute.
-    std::unique_ptr<Sparse> sparse;
-
-    unsigned int GetNumComponents();
-    unsigned int GetBytesPerComponent();
-    unsigned int GetElementSize();
-
-    inline uint8_t *GetPointer();
-
-    template <class T>
-    void ExtractData(T *&outData);
-
-    void WriteData(size_t count, const void *src_buffer, size_t src_stride);
-
-    //! Helper class to iterate the data
-    class Indexer {
-        friend struct Accessor;
-
-        // This field is reported as not used, making it protectd is the easiest way to work around it without going to the bottom of what the problem is:
-        // ../code/glTF2/glTF2Asset.h:392:19: error: private field 'accessor' is not used [-Werror,-Wunused-private-field]
-    protected:
-        Accessor &accessor;
-
-    private:
-        uint8_t *data;
-        size_t elemSize, stride;
-
-        Indexer(Accessor &acc);
-
-    public:
-        //! Accesses the i-th value as defined by the accessor
-        template <class T>
-        T GetValue(int i);
-
-        //! Accesses the i-th value as defined by the accessor
-        inline unsigned int GetUInt(int i) {
-            return GetValue<unsigned int>(i);
-        }
-
-        inline bool IsValid() const {
-            return data != 0;
-        }
-    };
-
-    inline Indexer GetIndexer() {
-        return Indexer(*this);
-    }
-
-    Accessor() {}
-    void Read(Value &obj, Asset &r);
-
-    //sparse
-    struct Sparse {
-        size_t count;
-        ComponentType indicesType;
-        Ref<BufferView> indices;
-        size_t indicesByteOffset;
-        Ref<BufferView> values;
-        size_t valuesByteOffset;
-
-        std::vector<uint8_t> data; //!< Actual data, which may be defaulted to an array of zeros or the original data, with the sparse buffer view applied on top of it.
-
-        void PopulateData(size_t numBytes, uint8_t *bytes);
-        void PatchData(unsigned int elementSize);
-    };
-};
-
 //! A buffer points to binary geometry, animation, or skins.
 struct Buffer : public Object {
     /********************* Types *********************/
@@ -597,6 +513,90 @@ struct BufferView : public Object {
     uint8_t *GetPointer(size_t accOffset);
 };
 
+//! A typed view into a BufferView. A BufferView contains raw binary data.
+//! An accessor provides a typed view into a BufferView or a subset of a BufferView
+//! similar to how WebGL's vertexAttribPointer() defines an attribute in a buffer.
+struct Accessor : public Object {
+    struct Sparse;
+
+    Ref<BufferView> bufferView; //!< The ID of the bufferView. (required)
+    size_t byteOffset; //!< The offset relative to the start of the bufferView in bytes. (required)
+    ComponentType componentType; //!< The datatype of components in the attribute. (required)
+    size_t count; //!< The number of attributes referenced by this accessor. (required)
+    AttribType::Value type; //!< Specifies if the attribute is a scalar, vector, or matrix. (required)
+    std::vector<double> max; //!< Maximum value of each component in this attribute.
+    std::vector<double> min; //!< Minimum value of each component in this attribute.
+    std::unique_ptr<Sparse> sparse;
+    std::unique_ptr<Buffer> decodedBuffer; // Packed decoded data, returned instead of original bufferView if present
+
+    unsigned int GetNumComponents();
+    unsigned int GetBytesPerComponent();
+    unsigned int GetElementSize();
+
+    inline uint8_t *GetPointer();
+    inline size_t GetStride();
+    inline size_t GetMaxByteSize();
+
+    template <class T>
+    void ExtractData(T *&outData);
+
+    void WriteData(size_t count, const void *src_buffer, size_t src_stride);
+    void WriteSparseValues(size_t count, const void *src_data, size_t src_dataStride);
+    void WriteSparseIndices(size_t count, const void *src_idx, size_t src_idxStride);
+
+    //! Helper class to iterate the data
+    class Indexer {
+        friend struct Accessor;
+
+        // This field is reported as not used, making it protectd is the easiest way to work around it without going to the bottom of what the problem is:
+        // ../code/glTF2/glTF2Asset.h:392:19: error: private field 'accessor' is not used [-Werror,-Wunused-private-field]
+    protected:
+        Accessor &accessor;
+
+    private:
+        uint8_t *data;
+        size_t elemSize, stride;
+
+        Indexer(Accessor &acc);
+
+    public:
+        //! Accesses the i-th value as defined by the accessor
+        template <class T>
+        T GetValue(int i);
+
+        //! Accesses the i-th value as defined by the accessor
+        inline unsigned int GetUInt(int i) {
+            return GetValue<unsigned int>(i);
+        }
+
+        inline bool IsValid() const {
+            return data != nullptr;
+        }
+    };
+
+    inline Indexer GetIndexer() {
+        return Indexer(*this);
+    }
+
+    Accessor() {}
+    void Read(Value &obj, Asset &r);
+
+    //sparse
+    struct Sparse {
+        size_t count;
+        ComponentType indicesType;
+        Ref<BufferView> indices;
+        size_t indicesByteOffset;
+        Ref<BufferView> values;
+        size_t valuesByteOffset;
+
+        std::vector<uint8_t> data; //!< Actual data, which may be defaulted to an array of zeros or the original data, with the sparse buffer view applied on top of it.
+
+        void PopulateData(size_t numBytes, uint8_t *bytes);
+        void PatchData(unsigned int elementSize);
+    };
+};
+
 struct Camera : public Object {
     enum Type {
         Perspective,
@@ -683,6 +683,7 @@ const vec4 defaultBaseColor = { 1, 1, 1, 1 };
 const vec3 defaultEmissiveFactor = { 0, 0, 0 };
 const vec4 defaultDiffuseFactor = { 1, 1, 1, 1 };
 const vec3 defaultSpecularFactor = { 1, 1, 1 };
+const vec3 defaultSheenFactor = { 0, 0, 0 };
 
 struct TextureInfo {
     Ref<Texture> texture;
@@ -724,6 +725,29 @@ struct PbrSpecularGlossiness {
     void SetDefaults();
 };
 
+struct MaterialSheen {
+    vec3 sheenColorFactor;
+    float sheenRoughnessFactor;
+    TextureInfo sheenColorTexture;
+    TextureInfo sheenRoughnessTexture;
+
+    MaterialSheen() { SetDefaults(); }
+    void SetDefaults();
+};
+
+struct MaterialClearcoat {
+    float clearcoatFactor = 0.f;
+    float clearcoatRoughnessFactor = 0.f;
+    TextureInfo clearcoatTexture;
+    TextureInfo clearcoatRoughnessTexture;
+    NormalTextureInfo clearcoatNormalTexture;
+};
+
+struct MaterialTransmission {
+    TextureInfo transmissionTexture;
+    float transmissionFactor = 0.f;
+};
+
 //! The material appearance of a primitive.
 struct Material : public Object {
     //PBR metallic roughness properties
@@ -740,6 +764,15 @@ struct Material : public Object {
 
     //extension: KHR_materials_pbrSpecularGlossiness
     Nullable<PbrSpecularGlossiness> pbrSpecularGlossiness;
+
+    //extension: KHR_materials_sheen
+    Nullable<MaterialSheen> materialSheen;
+
+    //extension: KHR_materials_clearcoat
+    Nullable<MaterialClearcoat> materialClearcoat;
+
+    //extension: KHR_materials_transmission
+    Nullable<MaterialTransmission> materialTransmission;
 
     //extension: KHR_materials_unlit
     bool unlit;
@@ -802,7 +835,7 @@ struct CustomExtension : public Object {
     Nullable<std::vector<CustomExtension>> mValues;
 
     operator bool() const {
-        return Size();
+        return Size() != 0;
     }
 
     size_t Size() const {
@@ -816,7 +849,7 @@ struct CustomExtension : public Object {
 
     CustomExtension() = default;
 
-    CustomExtension(const CustomExtension& other)
+    CustomExtension(const CustomExtension &other)
         : Object(other)
         , mStringValue(other.mStringValue)
         , mDoubleValue(other.mDoubleValue)
@@ -869,6 +902,7 @@ struct Sampler : public Object {
 };
 
 struct Scene : public Object {
+    std::string name;
     std::vector<Ref<Node>> nodes;
 
     Scene() {}
@@ -1058,6 +1092,10 @@ public:
         bool KHR_materials_unlit;
         bool KHR_lights_punctual;
         bool KHR_texture_transform;
+        bool KHR_materials_sheen;
+        bool KHR_materials_clearcoat;
+        bool KHR_materials_transmission;
+        bool KHR_draco_mesh_compression;
     } extensionsUsed;
 
     //! Keeps info about the required extensions
@@ -1066,6 +1104,7 @@ public:
     } extensionsRequired;
 
     AssetMetadata asset;
+    Value *extras = nullptr;
 
     // Dictionaries for each type of object
 
@@ -1087,7 +1126,7 @@ public:
     Ref<Scene> scene;
 
 public:
-    Asset(IOSystem *io = 0) :
+    Asset(IOSystem *io = nullptr) :
             mIOSystem(io),
             asset(),
             accessors(*this, "accessors"),
@@ -1127,6 +1166,14 @@ private:
 
     IOStream *OpenFile(std::string path, const char *mode, bool absolute = false);
 };
+
+inline std::string getContextForErrorMessages(const std::string &id, const std::string &name) {
+    std::string context = id;
+    if (!name.empty()) {
+        context += " (\"" + name + "\")";
+    }
+    return context;
+}
 
 } // namespace glTF2
 

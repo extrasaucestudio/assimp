@@ -2,7 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2021, assimp team
 
 
 All rights reserved.
@@ -61,9 +61,10 @@ template<class TDeriving>
 class LogFunctions {
 public:
     // ------------------------------------------------------------------------------------------------
-    static void ThrowException(const std::string& msg)
+    template<typename... T>
+    static void ThrowException(T&&... args)
     {
-        throw DeadlyImportError(Prefix()+msg);
+        throw DeadlyImportError(Prefix(), args...);
     }
 
     // ------------------------------------------------------------------------------------------------

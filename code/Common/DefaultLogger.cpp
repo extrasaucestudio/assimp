@@ -3,7 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2021, assimp team
 
 
 
@@ -260,7 +260,7 @@ void DefaultLogger::kill() {
 // ----------------------------------------------------------------------------------
 //  Debug message
 void DefaultLogger::OnDebug(const char *message) {
-    if (m_Severity < Logger::DEBUG) {
+    if (m_Severity < Logger::DEBUGGING) {
         return;
     }
 

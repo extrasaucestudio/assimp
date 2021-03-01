@@ -2,7 +2,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2021, assimp team
 
 
 All rights reserved.
@@ -180,7 +180,7 @@ const aiImporterDesc *Q3BSPFileImporter::GetInfo() const {
 void Q3BSPFileImporter::InternReadFile(const std::string &rFile, aiScene *scene, IOSystem *ioHandler) {
     ZipArchiveIOSystem Archive(ioHandler, rFile);
     if (!Archive.isOpen()) {
-        throw DeadlyImportError("Failed to open file " + rFile + ".");
+        throw DeadlyImportError("Failed to open file ", rFile, ".");
     }
 
     std::string archiveName(""), mapName("");

@@ -3,7 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2021, assimp team
 
 All rights reserved.
 
@@ -68,9 +68,9 @@ namespace Assimp {
 namespace MDL {
 namespace HalfLife {
 
-#ifdef _WIN32
-#    pragma warning(disable : 4706) 
-#endif // _WIN32
+#ifdef _MSC_VER
+#    pragma warning(disable : 4706)
+#endif // _MSC_VER
 
 // ------------------------------------------------------------------------------------------------
 HL1MDLLoader::HL1MDLLoader(

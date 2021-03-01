@@ -3,7 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2021, assimp team
 
 All rights reserved.
 
@@ -675,7 +675,7 @@ void MD5Importer::LoadMD5CameraFile() {
 
     // Check whether we can read from the file
     if (!file.get() || !file->FileSize()) {
-        throw DeadlyImportError("Failed to read MD5CAMERA file: " + pFile);
+        throw DeadlyImportError("Failed to read MD5CAMERA file: ", pFile);
     }
     mHadMD5Camera = true;
     LoadFileIntoMemory(file.get());

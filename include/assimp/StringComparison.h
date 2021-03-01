@@ -2,7 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2021, assimp team
 
 
 All rights reserved.
@@ -145,11 +145,7 @@ int ASSIMP_stricmp(const char *s1, const char *s2) {
 #if (defined _MSC_VER)
 
     return ::_stricmp(s1, s2);
-#elif defined(__GNUC__)
-
-    return ::strcasecmp(s1, s2);
 #else
-
     char c1, c2;
     do {
         c1 = tolower(*s1++);

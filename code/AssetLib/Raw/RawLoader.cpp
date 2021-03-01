@@ -3,7 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2021, assimp team
 
 All rights reserved.
 
@@ -101,7 +101,7 @@ void RAWImporter::InternReadFile(const std::string &pFile,
 
     // Check whether we can read from the file
     if (file.get() == nullptr) {
-        throw DeadlyImportError("Failed to open RAW file " + pFile + ".");
+        throw DeadlyImportError("Failed to open RAW file ", pFile, ".");
     }
 
     // allocate storage and copy the contents of the file to a memory buffer

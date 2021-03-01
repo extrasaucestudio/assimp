@@ -2,7 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2021, assimp team
 
 
 All rights reserved.
@@ -90,7 +90,7 @@ namespace {
 AI_WONT_RETURN void TokenizeError(const std::string& message, unsigned int line, unsigned int column) AI_WONT_RETURN_SUFFIX;
 AI_WONT_RETURN void TokenizeError(const std::string& message, unsigned int line, unsigned int column)
 {
-    throw DeadlyImportError(Util::AddLineAndColumn("FBX-Tokenize",message,line,column));
+    throw DeadlyImportError("FBX-Tokenize", Util::GetLineAndColumnText(line,column), message);
 }
 
 

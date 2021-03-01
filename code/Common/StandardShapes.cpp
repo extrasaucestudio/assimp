@@ -2,7 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2021, assimp team
 
 All rights reserved.
 
@@ -139,7 +139,7 @@ aiMesh *StandardShapes::MakeMesh(const std::vector<aiVector3D> &positions,
         aiFace &f = out->mFaces[i];
         f.mNumIndices = numIndices;
         f.mIndices = new unsigned int[numIndices];
-        for (unsigned int j = 0; i < numIndices; ++i, ++a) {
+        for (unsigned int j = 0; j < numIndices; ++j, ++a) {
             f.mIndices[j] = a;
         }
     }

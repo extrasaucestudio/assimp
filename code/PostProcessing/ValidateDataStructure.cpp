@@ -3,7 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2021, assimp team
 
 
 
@@ -85,7 +85,7 @@ AI_WONT_RETURN void ValidateDSProcess::ReportError(const char *msg, ...) {
 
     va_end(args);
 
-    throw DeadlyImportError("Validation failed: " + std::string(szBuffer, iLen));
+    throw DeadlyImportError("Validation failed: ", std::string(szBuffer, iLen));
 }
 // ------------------------------------------------------------------------------------------------
 void ValidateDSProcess::ReportWarning(const char *msg, ...) {
@@ -844,7 +844,8 @@ void ValidateDSProcess::Validate(const aiAnimation *pAnimation,
     Validate(&pMeshMorphAnim->mName);
 
     if (!pMeshMorphAnim->mNumKeys) {
-        ReportError("Empty mesh morph animation channel");
+        ReportWarning("Empty mesh morph animation channel");
+        return;
     }
 
     // otherwise check whether one of the keys exceeds the total duration of the animation

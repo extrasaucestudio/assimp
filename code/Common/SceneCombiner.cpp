@@ -2,7 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2021, assimp team
 
 
 All rights reserved.
@@ -183,9 +183,10 @@ void SceneCombiner::MergeScenes(aiScene **_dest, std::vector<aiScene *> &src, un
             *_dest = src[0];
         return;
     }
-    if (*_dest)
+    if (*_dest) {
         (*_dest)->~aiScene();
-    else
+        new (*_dest) aiScene();
+    } else
         *_dest = new aiScene();
 
     // Create a dummy scene to serve as master for the others

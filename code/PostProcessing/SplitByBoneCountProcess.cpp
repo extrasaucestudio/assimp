@@ -2,7 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2020, assimp team
+Copyright (c) 2006-2021, assimp team
 
 
 All rights reserved.
@@ -405,6 +405,45 @@ void SplitByBoneCountProcess::SplitMesh( const aiMesh* pMesh, std::vector<aiMesh
 
                 dstWeight->mVertexId = a;
                 dstWeight->mWeight = bonesOnThisVertex[b].second;
+            }
+        }
+
+        // ... and copy all the morph targets for all the vertices which made it into the new submesh
+        if (pMesh->mNumAnimMeshes > 0) {
+            newMesh->mNumAnimMeshes = pMesh->mNumAnimMeshes;
+            newMesh->mAnimMeshes = new aiAnimMesh*[newMesh->mNumAnimMeshes];
+            
+            for (unsigned int morphIdx = 0; morphIdx < newMesh->mNumAnimMeshes; ++morphIdx) {
+                aiAnimMesh* origTarget = pMesh->mAnimMeshes[morphIdx];
+                aiAnimMesh* newTarget = new aiAnimMesh;
+                newTarget->mName = origTarget->mName;
+                newTarget->mWeight = origTarget->mWeight;
+                newTarget->mNumVertices = numSubMeshVertices;
+                newTarget->mVertices = new aiVector3D[numSubMeshVertices];
+                newMesh->mAnimMeshes[morphIdx] = newTarget;
+                
+                if (origTarget->HasNormals()) {
+                    newTarget->mNormals = new aiVector3D[numSubMeshVertices];
+                }
+                
+                if (origTarget->HasTangentsAndBitangents()) {
+                    newTarget->mTangents = new aiVector3D[numSubMeshVertices];
+                    newTarget->mBitangents = new aiVector3D[numSubMeshVertices];
+                }
+                
+                for( unsigned int vi = 0; vi < numSubMeshVertices; ++vi) {
+                    // find the source vertex for it in the source mesh
+                    unsigned int previousIndex = previousVertexIndices[vi];
+                    newTarget->mVertices[vi] = origTarget->mVertices[previousIndex];
+
+                    if (newTarget->HasNormals()) {
+                        newTarget->mNormals[vi] = origTarget->mNormals[previousIndex];
+                    }
+                    if (newTarget->HasTangentsAndBitangents()) {
+                        newTarget->mTangents[vi] = origTarget->mTangents[previousIndex];
+                        newTarget->mBitangents[vi] = origTarget->mBitangents[previousIndex];
+                    }
+                }
             }
         }
 
