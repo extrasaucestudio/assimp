@@ -123,3 +123,13 @@ test/spider_test.json
 test/spiderExport.stl
 test/test.3mf
 test/testExport.stl
+
+code/x64/
+contrib/zlib/x64/
+contrib/irrXML/x64/
+test/x64/
+tools/assimp_cmd/x64/
+cmake/contrib/zlib/CTestTestfile.cmake
+cmake/contrib/zlib/zconf.h
+cmake/contrib/zlib/zlib.pc
+cmake/include/assimp/config.h
