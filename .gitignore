@@ -126,3 +126,5 @@ cmake/contrib/zlib/CTestTestfile.cmake
 cmake/contrib/zlib/zconf.h
 cmake/contrib/zlib/zlib.pc
 cmake/include/assimp/config.h
+generated/assimpConfigVersion.cmake
+generated/assimpConfig.cmake
